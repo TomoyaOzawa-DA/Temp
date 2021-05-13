@@ -1,0 +1,314 @@
+---
+title: "Demand Estimation: Cournot Model"
+author: "Tomoya Ozawa"
+date: "`r format(Sys.time(), '%Y/%m/%d')`"
+output: 
+  github_document:
+    pandoc_args: --webtex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+if (!require("AER")) install.packages("AER")
+if (!require("purrr")) install.packages("purrr")
+if (!require("ggplot2")) install.packages("ggplot2")
+```
+
+## Data Generating Process
+### Demand function
+
+$$
+Q_t = \kappa-\lambda p_t + \mu X_t + \epsilon_t
+$$
+
+### Marginal cost function
+
+$$
+c_t = \xi + \omega W_t + \nu_t
+$$
+
+### Price
+
+$$
+p_t = \frac{1}{N_t + 1}\left( \frac{\kappa + \mu X_t + \epsilon_t}{\lambda} + c_t N_t \right)
+$$
+
+### Error terms
+
+$$
+\epsilon_t \sim N(0, \sigma_D), \  \nu_t \sim N(0, \sigma_c), \ Cov(\sigma_D, \sigma_c) = 0
+$$
+
+
+## Create a simulated data set
+
+```{r}
+set.seed(123)
+t <- 120
+N <- 30
+
+# Exogenous variables
+X <- runif(t, min = 300, max = 600)
+W <- runif(t, min = 30, max = 60)
+
+# Parameters
+kappa <- 3
+lambda <- 1.5
+mu <- 5
+xi <- 3
+omega <- 5
+
+# Error terms
+sigma_d <- 10
+sigma_c <- 10
+epsilon <- rnorm(t, mean = 0, sd = sigma_d)
+nu <- rnorm(t, mean = 0, sd = sigma_c)
+```
+
+
+```{r}
+cost <- xi + omega*W + nu
+price <- ((kappa + mu*X + epsilon)/lambda + cost*N)/(N + 1)
+Q <- kappa - lambda*price + mu*X + epsilon
+```
+
+```{r}
+df <- data.frame(time = 1:t,
+                 quantity = Q,
+                 price = price,
+                 cost = cost,
+                 X = X,
+                 W = W)
+head(df)
+```
+
+```{r}
+df_param <- data.frame(true = c(kappa, lambda, mu, xi,omega))
+rownames(df_param) <- c("kappa", "lambda", "mu", "xi","omega")
+head(df_param)
+```
+
+
+## Estimation
+### OLS
+
+```{r}
+out_ols <- lm(quantity ~ price + X, data = df)
+summary(out_ols)
+```
+
+```{r}
+cost_ols <- ((N + 1)*df$price)/N - (out_ols$coefficients[1] + out_ols$coefficients[3]*df$X)/(-out_ols$coefficients[2]*N)
+df$cost_ols <- cost_ols
+
+out_cost_ols <- lm(cost_ols ~ W, data = df)
+summary(out_cost_ols)
+```
+
+
+### IV
+```{r}
+# first stage
+out_first <- lm(price ~ W + X, data = df)
+summary(out_first)
+```
+
+
+```{r}
+library(AER)
+out_iv <- ivreg(quantity ~ price + X | W + X, data = df)
+summary(out_iv)
+```
+
+```{r}
+cost_iv <- ((N + 1)*df$price)/N - (out_iv$coefficients[1] + out_iv$coefficients[3]*df$X)/(-out_iv$coefficients[2]*N)
+df$cost_iv <- cost_iv
+
+out_cost_iv <- lm(cost_iv ~ W, data = df)
+summary(out_cost_iv)
+```
+
+## Comparison of parameters
+
+```{r}
+param_ols <- c(out_ols$coefficients, out_cost_ols$coefficients)
+param_ols[2] <- -param_ols[2]
+df_param$ols <- param_ols
+
+param_iv <- c(out_iv$coefficients, out_cost_iv$coefficients)
+param_iv[2] <- -param_iv[2]
+df_param$iv <- param_iv
+
+df_param
+```
+
+
+## Create simulated data sets
+```{r}
+set.seed(123)
+market <- 10000 # number of data sets
+```
+
+
+```{r}
+list_df <- list()
+for ( i in 1:market){
+  # Exogenous variables
+  x <- runif(t, min = 300000, max = 600000)
+  w <- runif(t, min = 30000, max = 60000)
+  
+  # Error terms
+  epsilon <- rnorm(t, mean = 0, sd = sigma_d)
+  nu <- rnorm(t, mean = 0, sd = sigma_c)
+  
+  # calculate
+  cost <- xi + omega*w + nu
+  price <- ((kappa + mu*x + epsilon)/lambda + cost*N)/(N + 1)
+  Q <- kappa - lambda*price + mu*x + epsilon
+  
+  # aggregate as data frame
+  temp <- data.frame(
+    time = 1:t,
+    quantity = Q,
+    price = price,
+    cost = cost,
+    X = x,
+    W = w,
+    epsilon = epsilon,
+    nu = nu
+  )
+  
+  list_df <- c(list_df, list(temp))
+}
+```
+
+## Estimation
+### OLS
+```{r}
+library(purrr)
+list_out_ols <- map(list_df, ~lm(quantity ~ price + X, data = .x))
+print(summary(list_out_ols[[1]]))
+```
+
+```{r}
+list_df_ols <- map2(list_df, list_out_ols, function(.x, .y){
+  cbind(.x,
+      data.frame(
+    cost_ols = ((N + 1)*.x$price)/N - (.y$coefficients[1] + .y$coefficients[3]*.x$X)/(-.y$coefficients[2]*N)
+    )
+  )
+})
+```
+
+
+```{r}
+list_out_cost_ols <- map(list_df_ols, ~lm(cost_ols ~ W, data = .x))
+summary(list_out_cost_ols[[1]])
+```
+
+### IV
+```{r}
+list_out_iv <- map(list_df, ~ivreg(quantity ~ price + X, data = .x))
+print(summary(list_out_iv[[1]]))
+```
+
+```{r}
+list_df_iv <- map2(list_df, list_out_iv, function(.x, .y){
+  cbind(.x,
+      data.frame(
+    cost_iv = ((N + 1)*.x$price)/N - (.y$coefficients[1] + .y$coefficients[3]*.x$X)/(-.y$coefficients[2]*N)
+    )
+  )
+})
+```
+
+```{r}
+list_out_cost_iv <- map(list_df_iv, ~lm(cost_iv ~ W, data = .x))
+summary(list_out_cost_iv[[1]])
+```
+
+
+## Comparison of parameters
+```{r}
+df_param_unlist_ols <- map2_dfr(list_out_ols, list_out_cost_ols, function(.x, .y){
+  data.frame(
+    Kappa = .x$coefficients[1],
+    Lambda = -.x$coefficients[2],
+    Mu = .x$coefficients[3],
+    Xi = .y$coefficients[1],
+    Omega = .y$coefficients[2]
+  )
+})
+```
+
+
+```{r}
+df_param_unlist_iv <- map2_dfr(list_out_iv, list_out_cost_iv, function(.x, .y){
+  data.frame(
+    Kappa = .x$coefficients[1],
+    Lambda = - .x$coefficients[2],
+    Mu = .x$coefficients[3],
+    Xi = .y$coefficients[1],
+    Omega = .y$coefficients[2]
+  )
+})
+```
+
+
+```{r}
+library(ggplot2)
+q_ols <- quantile(df_param_unlist_ols$Lambda, prob=c(0.025, 0.975))
+
+g_ols <- ggplot(df_param_unlist_ols, aes(x = Lambda)) + 
+  geom_histogram(fill = "skyblue", alpha=0.6) + 
+  ggtitle("OLS estimated value of lambda") + 
+  geom_vline(xintercept = q_ols[1], linetype = "dashed", colour = "lightskyblue") + 
+  geom_vline(xintercept = q_ols[2], linetype = "dashed", colour = "lightskyblue") + 
+  geom_vline(xintercept = lambda, colour = "lightskyblue")
+
+plot(g_ols)
+```
+
+```{r}
+q_iv <- quantile(df_param_unlist_iv$Lambda, prob=c(0.025, 0.975))
+
+g_iv <- ggplot(df_param_unlist_iv, aes(x = Lambda)) + 
+  geom_histogram(fill = "skyblue", alpha=0.6) + 
+  ggtitle("IV estimated value of lambda") + 
+  geom_vline(xintercept = q_iv[1], linetype = "dashed", colour = "lightskyblue") + 
+  geom_vline(xintercept = q_iv[2], linetype = "dashed", colour = "lightskyblue") + 
+  geom_vline(xintercept = lambda, colour = "lightskyblue")
+
+plot(g_iv)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
