@@ -45,7 +45,7 @@ $$
 ```{r}
 set.seed(123)
 t <- 120
-N <- 30
+N <- 3
 
 # Exogenous variables
 X <- runif(t, min = 300, max = 600)
@@ -141,7 +141,6 @@ df_param$iv <- param_iv
 
 df_param
 ```
-
 
 ## Create simulated data sets
 ```{r}

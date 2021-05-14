@@ -1,7 +1,7 @@
 Demand Estimation: Cournot Model
 ================
 Tomoya Ozawa
-2021/05/13
+2021/05/14
 
 ## Data Generating Process
 
@@ -48,7 +48,7 @@ p_t = \\frac{1}{N_t + 1}\\left( \\frac{\\kappa + \\mu X_t + \\epsilon_t}{\\lambd
 ``` r
 set.seed(123)
 t <- 120
-N <- 30
+N <- 3
 
 # Exogenous variables
 X <- runif(t, min = 300, max = 600)
@@ -84,13 +84,13 @@ df <- data.frame(time = 1:t,
 head(df)
 ```
 
-    ##   time quantity    price     cost        X        W
-    ## 1    1 1521.383 276.1063 242.2978 386.2733 49.43680
-    ## 2    2 2305.216 247.1781 195.9511 536.4915 39.59462
-    ## 3    3 1732.628 252.6214 214.1186 422.6931 39.23160
-    ## 4    4 2480.397 229.7120 174.5921 564.9052 36.59303
-    ## 5    5 2537.604 263.0240 206.6328 582.1402 41.08467
-    ## 6    6 1050.320 342.9969 319.6565 313.6669 59.52658
+    ##   time  quantity    price     cost        X        W
+    ## 1    1 1179.0720 504.3138 242.2978 386.2733 49.43680
+    ## 2    2 1786.5422 592.9605 195.9511 536.4915 39.59462
+    ## 3    3 1342.7864 512.5156 214.1186 422.6931 39.23160
+    ## 4    4 1922.3078 601.7716 174.5921 564.9052 36.59303
+    ## 5    5 1966.6427 643.6645 206.6328 582.1402 41.08467
+    ## 6    6  813.9979 500.5449 319.6565 313.6669 59.52658
 
 ``` r
 df_param <- data.frame(true = c(kappa, lambda, mu, xi,omega))
@@ -120,19 +120,19 @@ summary(out_ols)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -19.601  -7.129  -1.364   6.021  32.933 
+    ## -19.690  -7.115  -1.395   5.877  33.106 
     ## 
     ## Coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) -0.04492    7.28429  -0.006    0.995    
-    ## price       -1.49894    0.02231 -67.176   <2e-16 ***
-    ## X            5.00551    0.01065 469.917   <2e-16 ***
+    ## (Intercept) -2.77300    7.27035  -0.381    0.704    
+    ## price       -1.48413    0.02872 -51.680   <2e-16 ***
+    ## X            4.99292    0.02521 198.066   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 9.907 on 117 degrees of freedom
-    ## Multiple R-squared:  0.9995, Adjusted R-squared:  0.9995 
-    ## F-statistic: 1.104e+05 on 2 and 117 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 9.894 on 117 degrees of freedom
+    ## Multiple R-squared:  0.9991, Adjusted R-squared:  0.9991 
+    ## F-statistic: 6.649e+04 on 2 and 117 DF,  p-value: < 2.2e-16
 
 ``` r
 cost_ols <- ((N + 1)*df$price)/N - (out_ols$coefficients[1] + out_ols$coefficients[3]*df$X)/(-out_ols$coefficients[2]*N)
@@ -148,18 +148,18 @@ summary(out_cost_ols)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -22.9223  -5.9707   0.1905   6.9518  22.4246 
+    ## -22.3412  -7.1373   0.8252   6.8454  21.0750 
     ## 
     ## Coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  -7.1847     5.4383  -1.321    0.189    
-    ## W             5.2455     0.1194  43.935   <2e-16 ***
+    ## (Intercept) -11.3698     5.4530  -2.085   0.0392 *  
+    ## W             5.2629     0.1197  43.962   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 10.19 on 118 degrees of freedom
-    ## Multiple R-squared:  0.9424, Adjusted R-squared:  0.9419 
-    ## F-statistic:  1930 on 1 and 118 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 10.22 on 118 degrees of freedom
+    ## Multiple R-squared:  0.9425, Adjusted R-squared:  0.942 
+    ## F-statistic:  1933 on 1 and 118 DF,  p-value: < 2.2e-16
 
 ### IV
 
@@ -175,19 +175,19 @@ summary(out_first)
     ## 
     ## Residuals:
     ##      Min       1Q   Median       3Q      Max 
-    ## -22.6719  -6.5736   0.2876   6.7779  21.4697 
+    ## -16.5140  -5.2438   0.1417   5.7305  15.4698 
     ## 
     ## Coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) -2.08689    7.41175  -0.282    0.779    
-    ## W            5.06739    0.11600  43.684  < 2e-16 ***
-    ## X            0.09787    0.01056   9.268 1.16e-15 ***
+    ## (Intercept) -1.92315    5.70591  -0.337    0.737    
+    ## W            3.93421    0.08930  44.054   <2e-16 ***
+    ## X            0.82674    0.00813 101.694   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 9.866 on 117 degrees of freedom
-    ## Multiple R-squared:  0.9431, Adjusted R-squared:  0.9422 
-    ## F-statistic: 970.3 on 2 and 117 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 7.595 on 117 degrees of freedom
+    ## Multiple R-squared:   0.99,  Adjusted R-squared:  0.9899 
+    ## F-statistic:  5811 on 2 and 117 DF,  p-value: < 2.2e-16
 
 ``` r
 library(AER)
@@ -201,19 +201,19 @@ summary(out_iv)
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -19.699  -7.167  -1.298   6.023  33.115 
+    ## -19.664  -7.154  -1.295   6.012  33.056 
     ## 
     ## Coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept) -2.01951    7.41079  -0.273    0.786    
-    ## price       -1.49080    0.02300 -64.815   <2e-16 ***
-    ## X            5.00503    0.01066 469.379   <2e-16 ***
+    ## (Intercept) -2.01592    7.39088  -0.273    0.786    
+    ## price       -1.48816    0.02957 -50.321   <2e-16 ***
+    ## X            4.99613    0.02583 193.427   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
-    ## Residual standard error: 9.913 on 117 degrees of freedom
-    ## Multiple R-Squared: 0.9995,  Adjusted R-squared: 0.9995 
-    ## Wald test: 1.102e+05 on 2 and 117 DF,  p-value: < 2.2e-16
+    ## Residual standard error: 9.895 on 117 degrees of freedom
+    ## Multiple R-Squared: 0.9991,  Adjusted R-squared: 0.9991 
+    ## Wald test: 6.641e+04 on 2 and 117 DF,  p-value: < 2.2e-16
 
 ``` r
 cost_iv <- ((N + 1)*df$price)/N - (out_iv$coefficients[1] + out_iv$coefficients[3]*df$X)/(-out_iv$coefficients[2]*N)
@@ -228,19 +228,19 @@ summary(out_cost_iv)
     ## lm(formula = cost_iv ~ W, data = df)
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -22.9301  -5.9409   0.1875   7.0017  22.4386 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -22.238  -7.204   1.052   6.959  21.021 
     ## 
     ## Coefficients:
     ##             Estimate Std. Error t value Pr(>|t|)    
-    ## (Intercept)  -7.4354     5.4407  -1.367    0.174    
-    ## W             5.2461     0.1194  43.920   <2e-16 ***
+    ## (Intercept) -10.3976     5.4369  -1.912   0.0582 .  
+    ## W             5.2608     0.1194  44.074   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Residual standard error: 10.19 on 118 degrees of freedom
-    ## Multiple R-squared:  0.9424, Adjusted R-squared:  0.9419 
-    ## F-statistic:  1929 on 1 and 118 DF,  p-value: < 2.2e-16
+    ## Multiple R-squared:  0.9427, Adjusted R-squared:  0.9422 
+    ## F-statistic:  1943 on 1 and 118 DF,  p-value: < 2.2e-16
 
 ## Comparison of parameters
 
@@ -256,12 +256,12 @@ df_param$iv <- param_iv
 df_param
 ```
 
-    ##        true         ols        iv
-    ## kappa   3.0 -0.04491832 -2.019510
-    ## lambda  1.5  1.49894387  1.490804
-    ## mu      5.0  5.00551188  5.005025
-    ## xi      3.0 -7.18474299 -7.435398
-    ## omega   5.0  5.24553564  5.246077
+    ##        true        ols         iv
+    ## kappa   3.0  -2.773005  -2.015922
+    ## lambda  1.5   1.484130   1.488156
+    ## mu      5.0   4.992924   4.996133
+    ## xi      3.0 -11.369795 -10.397596
+    ## omega   5.0   5.262935   5.260835
 
 ## Create simulated data sets
 
@@ -318,19 +318,19 @@ print(summary(list_out_ols[[1]]))
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -19.581  -7.203  -1.236   6.014  33.094 
+    ## -19.581  -7.203  -1.236   6.013  33.094 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error    t value Pr(>|t|)    
-    ## (Intercept) -2.037e+00  7.438e+00     -0.274    0.785    
-    ## price       -1.500e+00  2.406e-05 -62352.212   <2e-16 ***
-    ## X            5.000e+00  1.070e-05 467345.618   <2e-16 ***
+    ## (Intercept) -2.040e+00  7.438e+00     -0.274    0.784    
+    ## price       -1.500e+00  3.104e-05 -48323.054   <2e-16 ***
+    ## X            5.000e+00  2.713e-05 184285.499   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Residual standard error: 9.901 on 117 degrees of freedom
     ## Multiple R-squared:      1,  Adjusted R-squared:      1 
-    ## F-statistic: 1.093e+11 on 2 and 117 DF,  p-value: < 2.2e-16
+    ## F-statistic: 6.564e+10 on 2 and 117 DF,  p-value: < 2.2e-16
 
 ``` r
 list_df_ols <- map2(list_df, list_out_ols, function(.x, .y){
@@ -352,19 +352,19 @@ summary(list_out_cost_ols[[1]])
     ## lm(formula = cost_ols ~ W, data = .x)
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -22.9304  -5.9398   0.1874   7.0037  22.4392 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -22.241  -7.226   1.028   6.960  21.026 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error   t value Pr(>|t|)    
-    ## (Intercept) -7.4469617  5.4407907    -1.369    0.174    
-    ## W            5.0002461  0.0001194 41860.849   <2e-16 ***
+    ## (Intercept) -1.052e+01  5.439e+00    -1.934   0.0555 .  
+    ## W            5.000e+00  1.194e-04 41878.451   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Residual standard error: 10.19 on 118 degrees of freedom
     ## Multiple R-squared:      1,  Adjusted R-squared:      1 
-    ## F-statistic: 1.752e+09 on 1 and 118 DF,  p-value: < 2.2e-16
+    ## F-statistic: 1.754e+09 on 1 and 118 DF,  p-value: < 2.2e-16
 
 ### IV
 
@@ -379,19 +379,19 @@ print(summary(list_out_iv[[1]]))
     ## 
     ## Residuals:
     ##     Min      1Q  Median      3Q     Max 
-    ## -19.581  -7.203  -1.236   6.014  33.094 
+    ## -19.581  -7.203  -1.236   6.013  33.094 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error    t value Pr(>|t|)    
-    ## (Intercept) -2.037e+00  7.438e+00     -0.274    0.785    
-    ## price       -1.500e+00  2.406e-05 -62352.212   <2e-16 ***
-    ## X            5.000e+00  1.070e-05 467345.618   <2e-16 ***
+    ## (Intercept) -2.040e+00  7.438e+00     -0.274    0.784    
+    ## price       -1.500e+00  3.104e-05 -48323.054   <2e-16 ***
+    ## X            5.000e+00  2.713e-05 184285.499   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Residual standard error: 9.901 on 117 degrees of freedom
     ## Multiple R-Squared:     1,   Adjusted R-squared:     1 
-    ## Wald test: 1.093e+11 on 2 and 117 DF,  p-value: < 2.2e-16
+    ## Wald test: 6.564e+10 on 2 and 117 DF,  p-value: < 2.2e-16
 
 ``` r
 list_df_iv <- map2(list_df, list_out_iv, function(.x, .y){
@@ -413,19 +413,19 @@ summary(list_out_cost_iv[[1]])
     ## lm(formula = cost_iv ~ W, data = .x)
     ## 
     ## Residuals:
-    ##      Min       1Q   Median       3Q      Max 
-    ## -22.9304  -5.9398   0.1874   7.0037  22.4392 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -22.241  -7.226   1.028   6.960  21.026 
     ## 
     ## Coefficients:
     ##               Estimate Std. Error   t value Pr(>|t|)    
-    ## (Intercept) -7.4469617  5.4407907    -1.369    0.174    
-    ## W            5.0002461  0.0001194 41860.849   <2e-16 ***
+    ## (Intercept) -1.052e+01  5.439e+00    -1.934   0.0555 .  
+    ## W            5.000e+00  1.194e-04 41878.451   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Residual standard error: 10.19 on 118 degrees of freedom
     ## Multiple R-squared:      1,  Adjusted R-squared:      1 
-    ## F-statistic: 1.752e+09 on 1 and 118 DF,  p-value: < 2.2e-16
+    ## F-statistic: 1.754e+09 on 1 and 118 DF,  p-value: < 2.2e-16
 
 ## Comparison of parameters
 
